@@ -30,7 +30,7 @@ RSI_ALIM_ESIGI = 30
 KAR_HEDEFI = 0.020      # %2.0 Kâr
 STOP_LOSS = 0.015       # %1.5 Zarar Kes
 
-kasa_tl = 500.0
+kasa_tl = 1000.0
 pozisyonda_mi = False
 alis_fiyati = 0.0
 
