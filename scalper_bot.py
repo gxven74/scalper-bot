@@ -4,6 +4,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import time
 import ccxt
 import pandas as pd
+from datetime import datetime, timezone, timedelta
 
 # 1. Render'ın servis açık kalsın diye beklediği sahte web sunucusu
 class SimpleHandler(BaseHTTPRequestHandler):
@@ -34,6 +35,7 @@ kasa_tl = 1000.0
 pozisyonda_mi = False
 alis_fiyati = 0.0
 
+
 print("==========================================")
 print(f"🤖 Mikro-Scalp Botu Bulutta Başlatıldı!")
 print(f"Takip: {PARITE} | Başlangıç Kasası: {kasa_tl:.2f} TL")
@@ -62,7 +64,11 @@ def veri_ve_rsi_getir():
 
 while True:
     fiyat, rsi = veri_ve_rsi_getir()
-    zaman = time.strftime('%H:%M:%S')
+    tsi = timezone(timedelta(hours=3))
+    zaman = datetime.now(tsi).strftime('%H:%M:%S')
+
+    print(f"[{zaman}] SOL/USDT: {fiyat:.2f}$ | RSI: {rsi:.1f} (Beklemede...)")
+    
 
     if fiyat is not None and rsi is not None:
         if not pozisyonda_mi:
