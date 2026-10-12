@@ -21,7 +21,7 @@ def start_server():
 threading.Thread(target=start_server, daemon=True).start()
 
 # 2. Borsa ve Bot Kodları
-borsa = ccxt.bybit({'enableRateLimit': True})
+borsa = ccxt.kraken({'enableRateLimit': True})
 
 PARITE = 'SOL/USDT'
 ZAMAN_DILIMI = '15m'
