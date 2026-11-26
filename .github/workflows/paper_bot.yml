@@ -2,9 +2,9 @@ name: Paper Trading Bot (24/7 Cloud)
 
 on:
   schedule:
-    # Her saatin 2. ve 32. dakikasinda calisir (4h mum kapanislarindan 2 dk sonra + 30 dk'da bir SL/TP kontrolu)
-    # Private repo ucretsiz kotasi: 2000 dk/ay | 48 calisma/gun * 30 = ~1440 dk/ay (guvenli sinirda)
-    - cron: "2,32 * * * *"
+    # Public repoda dakika sinirsiz: yogun saat baslarindan (:00/:30) kacinmak icin
+    # her 15 dakikada bir (:07, :22, :37, :52) calisir
+    - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
     inputs:
       reset_capital:
