@@ -1,14 +1,70 @@
-"""Terminal ve Markdown (STATUS.md) uzerinden Sanal Borsa durum ve performans raporu."""
+"""Terminal ve Markdown (STATUS.md) uzerinden Sanal Borsa durum, piyasa radari ve performans raporu."""
 
 import argparse
 from pathlib import Path
 from typing import Optional
 
+import numpy as np
 from tabulate import tabulate
 
-from config import DB_PATH, QUOTE_CURRENCY
-from data_loader import create_exchange, fetch_live_price
+from config import DB_PATH, DEFAULT_SYMBOLS, QUOTE_CURRENCY
+from data_loader import create_exchange, fetch_latest_closed_ohlcv, fetch_live_price
+from indicators import add_all_indicators
 from storage import PaperStorage
+
+
+def _build_market_radar(session, symbols, timeframe: str, positions: dict):
+    rows = []
+    live_prices = {}
+    for sym in symbols:
+        try:
+            df, live_price = fetch_latest_closed_ohlcv(sym, timeframe=timeframe, limit=250, exchange=session)
+            live_prices[sym] = live_price
+            ind = add_all_indicators(df)
+            row = ind.iloc[-1]
+            prev_close = float(df["close"].iloc[-1])
+            chg_4h = ((live_price - prev_close) / prev_close) * 100.0 if prev_close > 0 else 0.0
+
+            # 24 saatlik degisim (6 adet 4h mum oncesi)
+            p24 = float(df["close"].iloc[-7]) if len(df) >= 7 else prev_close
+            chg_24h = ((live_price - p24) / p24) * 100.0 if p24 > 0 else 0.0
+
+            ema200 = float(row["ema_200"]) if not np.isnan(row["ema_200"]) else None
+            st_dir = int(row["st_dir"])
+            adx_v = float(row["adx_14"]) if not np.isnan(row["adx_14"]) else 0.0
+            rsi_v = float(row["rsi_14"]) if not np.isnan(row["rsi_14"]) else 0.0
+
+            yon = "▲" if chg_24h >= 0 else "▼"
+            ema_txt = "Ustunde" if (ema200 and live_price > ema200) else "Altinda"
+            st_txt = "Yukselis" if st_dir == 1 else "Dusus"
+
+            if sym in positions:
+                p = positions[sym]
+                pnl_pct = ((live_price - p["entry_price"]) / p["entry_price"]) * 100.0
+                durum = f"POZISYON ACIK ({pnl_pct:+.2f}%)"
+            elif ema200 and live_price > ema200 and st_dir == 1 and adx_v > 18:
+                durum = "Trend Aktif"
+            elif ema200 and live_price > ema200 and st_dir == -1:
+                durum = "Sinyale Yakin (ST bekleniyor)"
+            else:
+                durum = "Beklemede (Dusus/Yatay)"
+
+            rows.append(
+                {
+                    "Parite": sym,
+                    f"Anlik ({QUOTE_CURRENCY})": f"{live_price:,.2f}",
+                    "4s Degisim": f"{chg_4h:+.2f}%",
+                    "24s Degisim": f"{yon} {chg_24h:+.2f}%",
+                    "RSI": round(rsi_v, 1),
+                    "ADX": round(adx_v, 1),
+                    "EMA200": ema_txt,
+                    "SuperTrend": st_txt,
+                    "Durum": durum,
+                }
+            )
+        except Exception:
+            continue
+    return rows, live_prices
 
 
 def build_report(
@@ -16,6 +72,7 @@ def build_report(
     fetch_live: bool = True,
     limit: int = 15,
     markdown_out: Optional[Path] = None,
+    timeframe: str = "4h",
 ) -> str:
     storage = PaperStorage(db_path=db_path)
     account = storage.get_account()
@@ -28,6 +85,7 @@ def build_report(
     trades = storage.get_closed_trades(limit=500)
 
     live_prices = {}
+    radar_rows = []
     usdt_try_rate: Optional[float] = None
     sess = create_exchange() if fetch_live else None
 
@@ -37,11 +95,13 @@ def build_report(
                 usdt_try_rate = fetch_live_price("USDT/TRY", session=sess)
             except Exception:
                 usdt_try_rate = None
+        radar_rows, live_prices = _build_market_radar(sess, DEFAULT_SYMBOLS, timeframe, positions)
         for sym in positions:
-            try:
-                live_prices[sym] = fetch_live_price(sym, session=sess)
-            except Exception:
-                live_prices[sym] = positions[sym]["entry_price"]
+            if sym not in live_prices:
+                try:
+                    live_prices[sym] = fetch_live_price(sym, session=sess)
+                except Exception:
+                    live_prices[sym] = positions[sym]["entry_price"]
 
     positions_val = sum(
         p["qty"] * live_prices.get(sym, p["entry_price"]) for sym, p in positions.items()
@@ -119,10 +179,13 @@ def build_report(
             )
 
     # Terminal ciktisi
-    print("=" * 78)
+    print("=" * 92)
     print(f"SANAL BORSA (PAPER TRADING) DURUM RAPORU ({QUOTE_CURRENCY})")
-    print("=" * 78)
+    print("=" * 92)
     print(tabulate(summary_rows, tablefmt="simple"))
+    if radar_rows:
+        print("\n--- PIYASA RADARI (ANLIK INIS-CIKIS & SINYAL DURUMU) ---")
+        print(tabulate(radar_rows, headers="keys", tablefmt="github"))
     print("\n--- ACIK POZISYONLAR ---")
     print(tabulate(pos_rows, headers="keys", tablefmt="github") if pos_rows else "Acik pozisyon yok.")
     print("\n--- KAPALI ISLEM ISTATISTIKLERI ---")
@@ -135,11 +198,18 @@ def build_report(
     md_parts = [
         f"# Sanal Borsa (Paper Trading) Canli Durum ({QUOTE_CURRENCY})\n",
         tabulate(summary_rows, headers=["Metrik", "Deger"], tablefmt="github"),
-        "\n\n## Acik Pozisyonlar\n",
-        tabulate(pos_rows, headers="keys", tablefmt="github") if pos_rows else "_Acik pozisyon yok._",
-        "\n\n## Kapali Islem Istatistikleri\n",
-        trade_stats_line,
     ]
+    if radar_rows:
+        md_parts.append("\n\n## Piyasa Radari (Anlik Inis-Cikis & Sinyal Durumu)\n")
+        md_parts.append(tabulate(radar_rows, headers="keys", tablefmt="github"))
+    md_parts.extend(
+        [
+            "\n\n## Acik Pozisyonlar\n",
+            tabulate(pos_rows, headers="keys", tablefmt="github") if pos_rows else "_Acik pozisyon yok._",
+            "\n\n## Kapali Islem Istatistikleri\n",
+            trade_stats_line,
+        ]
+    )
     if trade_rows:
         md_parts.append(f"\n\n## Son {len(trade_rows)} Kapali Islem\n")
         md_parts.append(tabulate(trade_rows, headers="keys", tablefmt="github"))

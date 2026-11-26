@@ -12,6 +12,17 @@
 | Son Guncelleme        | 2026-11-26 17:24:48 UTC                                     |
 
 
+## Piyasa Radari (Anlik Inis-Cikis & Sinyal Durumu)
+
+| Parite   |     Anlik (TRY) | 4s Degisim   | 24s Degisim   |   RSI |   ADX | EMA200   | SuperTrend   | Durum                   |
+|----------|-----------------|--------------|---------------|-------|-------|----------|--------------|-------------------------|
+| BTC/TRY  |     3.06094e+06 | -0.29%       | ▲ +3.53%      |  52.5 |  18.7 | Altinda  | Yukselis     | Beklemede (Dusus/Yatay) |
+| ETH/TRY  | 85660           | -0.05%       | ▲ +2.56%      |  50   |  18.4 | Altinda  | Dusus        | Beklemede (Dusus/Yatay) |
+| SOL/TRY  |  3590.1         | -0.25%       | ▲ +4.56%      |  53.5 |  14.5 | Altinda  | Dusus        | Beklemede (Dusus/Yatay) |
+| BNB/TRY  | 27916           | +0.03%       | ▲ +2.54%      |  49.1 |  16.8 | Altinda  | Yukselis     | Beklemede (Dusus/Yatay) |
+| XRP/TRY  |    48.03        | +0.06%       | ▲ +5.03%      |  54.7 |  21.6 | Altinda  | Yukselis     | Beklemede (Dusus/Yatay) |
+
+
 ## Acik Pozisyonlar
 
 _Acik pozisyon yok._
