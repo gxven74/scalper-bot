@@ -185,7 +185,7 @@ def build_report(
     print(tabulate(summary_rows, tablefmt="simple"))
     if radar_rows:
         print("\n--- PIYASA RADARI (ANLIK INIS-CIKIS & SINYAL DURUMU) ---")
-        print(tabulate(radar_rows, headers="keys", tablefmt="github"))
+        print(tabulate(radar_rows, headers="keys", tablefmt="github", disable_numparse=True))
     print("\n--- ACIK POZISYONLAR ---")
     print(tabulate(pos_rows, headers="keys", tablefmt="github") if pos_rows else "Acik pozisyon yok.")
     print("\n--- KAPALI ISLEM ISTATISTIKLERI ---")
@@ -201,7 +201,7 @@ def build_report(
     ]
     if radar_rows:
         md_parts.append("\n\n## Piyasa Radari (Anlik Inis-Cikis & Sinyal Durumu)\n")
-        md_parts.append(tabulate(radar_rows, headers="keys", tablefmt="github"))
+        md_parts.append(tabulate(radar_rows, headers="keys", tablefmt="github", disable_numparse=True))
     md_parts.extend(
         [
             "\n\n## Acik Pozisyonlar\n",

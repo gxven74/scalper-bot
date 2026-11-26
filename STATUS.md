@@ -14,13 +14,13 @@
 
 ## Piyasa Radari (Anlik Inis-Cikis & Sinyal Durumu)
 
-| Parite   |     Anlik (TRY) | 4s Degisim   | 24s Degisim   |   RSI |   ADX | EMA200   | SuperTrend   | Durum                   |
-|----------|-----------------|--------------|---------------|-------|-------|----------|--------------|-------------------------|
-| BTC/TRY  |     3.06094e+06 | -0.29%       | ▲ +3.53%      |  52.5 |  18.7 | Altinda  | Yukselis     | Beklemede (Dusus/Yatay) |
-| ETH/TRY  | 85660           | -0.05%       | ▲ +2.56%      |  50   |  18.4 | Altinda  | Dusus        | Beklemede (Dusus/Yatay) |
-| SOL/TRY  |  3590.1         | -0.25%       | ▲ +4.56%      |  53.5 |  14.5 | Altinda  | Dusus        | Beklemede (Dusus/Yatay) |
-| BNB/TRY  | 27916           | +0.03%       | ▲ +2.54%      |  49.1 |  16.8 | Altinda  | Yukselis     | Beklemede (Dusus/Yatay) |
-| XRP/TRY  |    48.03        | +0.06%       | ▲ +5.03%      |  54.7 |  21.6 | Altinda  | Yukselis     | Beklemede (Dusus/Yatay) |
+| Parite   | Anlik (TRY)   | 4s Degisim   | 24s Degisim   | RSI   | ADX   | EMA200   | SuperTrend   | Durum                   |
+|----------|---------------|--------------|---------------|-------|-------|----------|--------------|-------------------------|
+| BTC/TRY  | 3,058,917.00  | -0.35%       | ▲ +3.46%      | 52.5  | 18.7  | Altinda  | Yukselis     | Beklemede (Dusus/Yatay) |
+| ETH/TRY  | 85,616.00     | -0.10%       | ▲ +2.51%      | 50.0  | 18.4  | Altinda  | Dusus        | Beklemede (Dusus/Yatay) |
+| SOL/TRY  | 3,585.10      | -0.39%       | ▲ +4.42%      | 53.5  | 14.5  | Altinda  | Dusus        | Beklemede (Dusus/Yatay) |
+| BNB/TRY  | 27,907.00     | -0.00%       | ▲ +2.51%      | 49.1  | 16.8  | Altinda  | Yukselis     | Beklemede (Dusus/Yatay) |
+| XRP/TRY  | 47.99         | -0.02%       | ▲ +4.94%      | 54.7  | 21.6  | Altinda  | Yukselis     | Beklemede (Dusus/Yatay) |
 
 
 ## Acik Pozisyonlar
