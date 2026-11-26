@@ -1,0 +1,74 @@
+name: Paper Trading Bot (24/7 Cloud)
+
+on:
+  schedule:
+    # Her saatin 2. ve 32. dakikasinda calisir (4h mum kapanislarindan 2 dk sonra + 30 dk'da bir SL/TP kontrolu)
+    # Private repo ucretsiz kotasi: 2000 dk/ay | 48 calisma/gun * 30 = ~1440 dk/ay (guvenli sinirda)
+    - cron: "2,32 * * * *"
+  workflow_dispatch:
+    inputs:
+      reset_capital:
+        description: "Sanal kasayi sifirlamak icin tutar girin (bos birakirsaniz normal devam eder, orn: 500)"
+        required: false
+        default: ""
+      strategy:
+        description: "Strateji secimi"
+        required: false
+        default: "supertrend_ema"
+        type: choice
+        options:
+          - supertrend_ema
+          - bb_reversion_trend
+          - ema_pullback_momentum
+          - donchian_breakout
+          - rsi_trend_atr
+
+permissions:
+  contents: write
+
+concurrency:
+  group: paper-trading-bot
+  cancel-in-progress: false
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repoyu cek
+        uses: actions/checkout@v4
+
+      - name: Python kur (pip onbellekli)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Bagimliliklari yukle
+        run: pip install -r requirements.txt
+
+      - name: Sanal bot tek dongu calistir
+        env:
+          RESET_CAPITAL: ${{ github.event.inputs.reset_capital }}
+          STRATEGY: ${{ github.event.inputs.strategy || 'supertrend_ema' }}
+        run: |
+          if [ -n "$RESET_CAPITAL" ]; then
+            python paper_trader.py --strategy "$STRATEGY" --reset --capital "$RESET_CAPITAL" --once
+          else
+            python paper_trader.py --strategy "$STRATEGY" --capital 100 --once
+          fi
+
+      - name: STATUS.md raporunu guncelle
+        run: python report.py --markdown STATUS.md
+
+      - name: Guncel kasa ve islem kayitlarini kaydet
+        run: |
+          git config user.name "paper-bot[bot]"
+          git config user.email "paper-bot[bot]@users.noreply.github.com"
+          git add -f paper_trading.db STATUS.md logs/paper_trades.csv logs/equity_curve.csv 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "bot: update paper trading state [skip ci]"
+            git pull --rebase origin "${{ github.ref_name }}"
+            git push
+          else
+            echo "Degisiklik yok, commit atlandi."
+          fi

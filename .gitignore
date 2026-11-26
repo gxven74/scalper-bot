@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Backtest gecmis veri onbellegi (buyuk dosyalar repoya yuklenmesin)
+data/
+logs/backtest_*.csv
+logs/bot.log*
+logs/nohup.out
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
