@@ -139,7 +139,7 @@ def run_single_backtest(
     start_idx = 205
     buy_hold_pct = ((records[-1]["close"] - records[start_idx]["open"]) / records[start_idx]["open"]) * 100.0
 
-    cash = ex_cfg.initial_capital_usdt
+    cash = ex_cfg.initial_capital
     qty = 0.0
     in_pos = False
     entry_price = 0.0
@@ -223,7 +223,7 @@ def run_single_backtest(
             else:
                 alloc_usdt = cash * risk_cfg.max_position_pct
 
-            if alloc_usdt >= 5.0:  # Minimum 5 USDT Binance spot emir esigi
+            if alloc_usdt >= ex_cfg.min_notional:  # Minimum spot emir esigi
                 entry_fee = alloc_usdt * ex_cfg.fee_rate
                 net_buy_usdt = alloc_usdt - entry_fee
                 qty = net_buy_usdt / fill_entry
@@ -344,7 +344,7 @@ def run_single_backtest(
         strategy=strategy_name,
         symbol=symbol,
         timeframe=timeframe,
-        initial_capital=ex_cfg.initial_capital_usdt,
+        initial_capital=ex_cfg.initial_capital,
         equity_series=eq_series,
         trades=trades,
         buy_and_hold_pct=buy_hold_pct,
@@ -398,7 +398,7 @@ def run_portfolio_backtest(
         bh_returns.append(((r1["close"] - r0["open"]) / r0["open"]) * 100.0)
     avg_bh_pct = float(np.mean(bh_returns))
 
-    cash = ex_cfg.initial_capital_usdt
+    cash = ex_cfg.initial_capital
     positions: Dict[str, dict] = {}
     pending_entries: Dict[str, Signal] = {}
     pending_exits: Dict[str, str] = {}
@@ -479,7 +479,7 @@ def run_portfolio_backtest(
             else:
                 alloc = min(cash, per_slot_cap)
 
-            if alloc >= 5.0:
+            if alloc >= ex_cfg.min_notional:
                 entry_fee = alloc * ex_cfg.fee_rate
                 net_buy = alloc - entry_fee
                 qty = net_buy / fill_entry
@@ -610,7 +610,7 @@ def run_portfolio_backtest(
         strategy=strategy_name,
         symbol="+".join(s.split("/")[0] for s in prepared.keys()),
         timeframe=timeframe,
-        initial_capital=ex_cfg.initial_capital_usdt,
+        initial_capital=ex_cfg.initial_capital,
         equity_series=eq_series,
         trades=trades,
         buy_and_hold_pct=avg_bh_pct,

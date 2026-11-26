@@ -28,7 +28,7 @@ Wants=network-online.target
 Type=simple
 User=${USER_NAME}
 WorkingDirectory=${APP_DIR}
-ExecStart=${APP_DIR}/.venv/bin/python ${APP_DIR}/paper_trader.py --strategy supertrend_ema --timeframe 4h --capital 100 --interval 60
+ExecStart=${APP_DIR}/.venv/bin/python ${APP_DIR}/paper_trader.py --strategy supertrend_ema --timeframe 4h --capital 5000 --interval 60
 Restart=always
 RestartSec=15
 Environment=PYTHONUNBUFFERED=1

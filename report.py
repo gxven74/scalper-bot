@@ -6,7 +6,7 @@ from typing import Optional
 
 from tabulate import tabulate
 
-from config import DB_PATH
+from config import DB_PATH, QUOTE_CURRENCY
 from data_loader import create_exchange, fetch_live_price
 from storage import PaperStorage
 
@@ -28,8 +28,15 @@ def build_report(
     trades = storage.get_closed_trades(limit=500)
 
     live_prices = {}
-    if fetch_live and positions:
-        sess = create_exchange()
+    usdt_try_rate: Optional[float] = None
+    sess = create_exchange() if fetch_live else None
+
+    if fetch_live and sess is not None:
+        if QUOTE_CURRENCY == "TRY":
+            try:
+                usdt_try_rate = fetch_live_price("USDT/TRY", session=sess)
+            except Exception:
+                usdt_try_rate = None
         for sym in positions:
             try:
                 live_prices[sym] = fetch_live_price(sym, session=sess)
@@ -50,12 +57,17 @@ def build_report(
     )
     updated_str = account["updated_at"][:19].replace("T", " ") + " UTC"
 
+    usdt_note = ""
+    if usdt_try_rate and usdt_try_rate > 0:
+        usdt_eq = total_equity / usdt_try_rate
+        usdt_note = f" (~{usdt_eq:.2f} USDT, kur: {usdt_try_rate:.2f})"
+
     summary_rows = [
-        ["Baslangic Kasa", f"{init_cap:.2f} USDT"],
-        ["Guncel Toplam Kasa", f"{total_equity:.2f} USDT ({net_pnl:+.2f} USDT / {net_pnl_pct:+.2f}%)"],
-        ["Serbest Nakit", f"{account['cash_usdt']:.2f} USDT"],
-        ["Acik Pozisyon Degeri", f"{positions_val:.2f} USDT ({len(positions)} pozisyon)"],
-        ["Zirve Kasa / Anlik DD", f"{account['peak_equity']:.2f} USDT / %{dd_pct:.2f}"],
+        ["Baslangic Kasa", f"{init_cap:,.2f} {QUOTE_CURRENCY}"],
+        ["Guncel Toplam Kasa", f"{total_equity:,.2f} {QUOTE_CURRENCY} ({net_pnl:+,.2f} {QUOTE_CURRENCY} / {net_pnl_pct:+.2f}%){usdt_note}"],
+        ["Serbest Nakit", f"{account['cash_usdt']:,.2f} {QUOTE_CURRENCY}"],
+        ["Acik Pozisyon Degeri", f"{positions_val:,.2f} {QUOTE_CURRENCY} ({len(positions)} pozisyon)"],
+        ["Zirve Kasa / Anlik DD", f"{account['peak_equity']:,.2f} {QUOTE_CURRENCY} / %{dd_pct:.2f}"],
         ["Gunluk Kill-Switch", "AKTIF (Durduruldu)" if account["daily_halted"] else "Normal"],
         ["Max DD Korumasi", "AKTIF (Durduruldu)" if account["dd_halted"] else "Normal"],
         ["Son Guncelleme", updated_str],
@@ -64,18 +76,18 @@ def build_report(
     pos_rows = []
     for sym, p in positions.items():
         cur = live_prices.get(sym, p["entry_price"])
-        unr_usdt = (p["qty"] * cur) - p["notional_usdt"]
-        unr_pct = (unr_usdt / p["notional_usdt"]) * 100.0 if p["notional_usdt"] > 0 else 0.0
+        unr_val = (p["qty"] * cur) - p["notional_usdt"]
+        unr_pct = (unr_val / p["notional_usdt"]) * 100.0 if p["notional_usdt"] > 0 else 0.0
         pos_rows.append(
             {
                 "Parite": sym,
                 "Strateji": p["strategy"],
-                "Giris": round(p["entry_price"], 4),
-                "Anlik": round(cur, 4),
-                "Tutar (USDT)": round(p["notional_usdt"], 2),
-                "Anlik PnL": f"{unr_usdt:+.2f} ({unr_pct:+.2f}%)",
-                "Stop-Loss": round(p["stop_loss"], 4) if p["stop_loss"] else "-",
-                "Take-Profit": round(p["take_profit"], 4) if p["take_profit"] else "Trailing",
+                "Giris": round(p["entry_price"], 2),
+                "Anlik": round(cur, 2),
+                f"Tutar ({QUOTE_CURRENCY})": round(p["notional_usdt"], 2),
+                "Anlik PnL": f"{unr_val:+.2f} ({unr_pct:+.2f}%)",
+                "Stop-Loss": round(p["stop_loss"], 2) if p["stop_loss"] else "-",
+                "Take-Profit": round(p["take_profit"], 2) if p["take_profit"] else "Trailing",
             }
         )
 
@@ -91,16 +103,16 @@ def build_report(
         total_fees = sum(t["fees_usdt"] for t in trades)
         trade_stats_line = (
             f"Toplam Islem: **{len(trades)}** | Kazanan: **{len(wins)}** | Kaybeden: **{len(losses)}** | "
-            f"Win Rate: **%{win_rate:.1f}** | Profit Factor: **{pf:.2f}** | Komisyon: **{total_fees:.2f} USDT**"
+            f"Win Rate: **%{win_rate:.1f}** | Profit Factor: **{pf:.2f}** | Komisyon: **{total_fees:,.2f} {QUOTE_CURRENCY}**"
         )
         for t in trades[:limit]:
             trade_rows.append(
                 {
                     "Cikis (UTC)": t["exit_time"][:16].replace("T", " "),
                     "Parite": t["symbol"],
-                    "Giris": round(t["entry_price"], 4),
-                    "Cikis": round(t["exit_price"], 4),
-                    "PnL (USDT)": f"{t['pnl_usdt']:+.2f}",
+                    "Giris": round(t["entry_price"], 2),
+                    "Cikis": round(t["exit_price"], 2),
+                    f"PnL ({QUOTE_CURRENCY})": f"{t['pnl_usdt']:+.2f}",
                     "PnL %": f"{t['pnl_pct']:+.2f}%",
                     "Neden": t["exit_reason"],
                 }
@@ -108,7 +120,7 @@ def build_report(
 
     # Terminal ciktisi
     print("=" * 78)
-    print("SANAL BORSA (PAPER TRADING) DURUM RAPORU")
+    print(f"SANAL BORSA (PAPER TRADING) DURUM RAPORU ({QUOTE_CURRENCY})")
     print("=" * 78)
     print(tabulate(summary_rows, tablefmt="simple"))
     print("\n--- ACIK POZISYONLAR ---")
@@ -121,7 +133,7 @@ def build_report(
 
     # Markdown ciktisi (GitHub'da telefon/web'den anlik takip icin)
     md_parts = [
-        "# Sanal Borsa (Paper Trading) Canli Durum\n",
+        f"# Sanal Borsa (Paper Trading) Canli Durum ({QUOTE_CURRENCY})\n",
         tabulate(summary_rows, headers=["Metrik", "Deger"], tablefmt="github"),
         "\n\n## Acik Pozisyonlar\n",
         tabulate(pos_rows, headers="keys", tablefmt="github") if pos_rows else "_Acik pozisyon yok._",

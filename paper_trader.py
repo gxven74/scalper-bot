@@ -28,6 +28,7 @@ from config import (
     ExchangeSimConfig,
     LOGS_DIR,
     PaperBotConfig,
+    QUOTE_CURRENCY,
     RiskConfig,
     TRADES_CSV_PATH,
 )
@@ -119,16 +120,19 @@ class PaperTradingBot:
         account["cash_usdt"] = new_cash
         tag = "KAR" if pnl_usdt >= 0 else "ZARAR"
         self.logger.info(
-            "[CIKIS-%s] %s | Neden: %s | Giris: %.4f -> Cikis: %.4f | PnL: %+.2f USDT (%+.2f%%) | Komisyon: %.3f$ | Kasa Nakit: %.2f$",
+            "[CIKIS-%s] %s | Neden: %s | Giris: %.2f -> Cikis: %.2f | PnL: %+.2f %s (%+.2f%%) | Komisyon: %.2f %s | Kasa Nakit: %.2f %s",
             tag,
             pos["symbol"],
             exit_reason,
             pos["entry_price"],
             fill_exit,
             pnl_usdt,
+            QUOTE_CURRENCY,
             pnl_pct,
             total_fees,
+            QUOTE_CURRENCY,
             new_cash,
+            QUOTE_CURRENCY,
         )
         return new_cash
 
@@ -157,8 +161,15 @@ class PaperTradingBot:
         else:
             alloc = min(account["cash_usdt"], per_slot_cap)
 
-        if alloc < 5.0:
-            self.logger.info("[ATLANDI] %s icin yeterli nakit yok (ayrilan: %.2f$ < 5$)", symbol, alloc)
+        if alloc < ex_cfg.min_notional:
+            self.logger.info(
+                "[ATLANDI] %s icin yeterli nakit yok (ayrilan: %.2f %s < %.0f %s)",
+                symbol,
+                alloc,
+                QUOTE_CURRENCY,
+                ex_cfg.min_notional,
+                QUOTE_CURRENCY,
+            )
             return False
 
         entry_fee = alloc * ex_cfg.fee_rate
@@ -184,18 +195,19 @@ class PaperTradingBot:
         }
         self.storage.save_open_position(pos)
         self.logger.info(
-            "[ALIM] %s | Fiyat: %.4f | Tutar: %.2f$ | SL: %s | TP: %s | Neden: %s",
+            "[ALIM] %s | Fiyat: %.2f | Tutar: %.2f %s | SL: %s | TP: %s | Neden: %s",
             symbol,
             fill_entry,
             alloc,
-            f"{sl:.4f}" if sl else "-",
-            f"{sig.take_profit:.4f}" if sig.take_profit else "Trailing/Signal",
+            QUOTE_CURRENCY,
+            f"{sl:.2f}" if sl else "-",
+            f"{sig.take_profit:.2f}" if sig.take_profit else "Trailing/Signal",
             sig.reason,
         )
         return True
 
     def run_cycle(self) -> None:
-        account = self.storage.ensure_account(self.cfg.exchange.initial_capital_usdt)
+        account = self.storage.ensure_account(self.cfg.exchange.initial_capital)
         positions = self.storage.get_open_positions()
         today_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
@@ -225,7 +237,7 @@ class PaperTradingBot:
             account["day_utc"] = today_utc
             account["day_start_equity"] = total_equity
             account["daily_halted"] = 0
-            self.logger.info("[YENI GUN UTC] %s | Gun basi kasa: %.2f USDT", today_utc, total_equity)
+            self.logger.info("[YENI GUN UTC] %s | Gun basi kasa: %.2f %s", today_utc, total_equity, QUOTE_CURRENCY)
 
         # 2) Acik pozisyonlar icin ANLIK SL / TP kontrolu
         for sym in list(positions.keys()):
@@ -264,11 +276,12 @@ class PaperTradingBot:
             if sym_state["last_candle_ts_ms"] == 0:
                 self.storage.set_symbol_state(sym, last_closed_ts_ms, 0)
                 self.logger.info(
-                    "[SENKRON] %s | Son kapanmis %s mumu kaydedildi (%s) | Anlik: %.4f$",
+                    "[SENKRON] %s | Son kapanmis %s mumu kaydedildi (%s) | Anlik: %.2f %s",
                     sym,
                     self.cfg.timeframe,
                     df_closed["timestamp"].iloc[-1].strftime("%Y-%m-%d %H:%M UTC"),
                     live_prices[sym],
+                    QUOTE_CURRENCY,
                 )
                 continue
 
@@ -288,7 +301,7 @@ class PaperTradingBot:
                     new_sl = pos["highest_price"] - mult * atr_val
                     if pos["stop_loss"] is None or new_sl > pos["stop_loss"]:
                         pos["stop_loss"] = new_sl
-                        self.logger.info("[TRAILING SL] %s yeni stop: %.4f$", sym, new_sl)
+                        self.logger.info("[TRAILING SL] %s yeni stop: %.2f %s", sym, new_sl, QUOTE_CURRENCY)
                 self.storage.save_open_position(pos)
 
             sig = self.strategy_fn(row, prev, in_pos)
@@ -367,12 +380,15 @@ class PaperTradingBot:
 
         net_pnl_pct = ((total_equity - account["initial_capital"]) / account["initial_capital"]) * 100.0
         self.logger.info(
-            "[DURUM] Kasa: %.2f$ (%+.2f%%) | Nakit: %.2f$ | Acik Poz: %d (%.2f$) | DD: %.2f%%",
+            "[DURUM] Kasa: %.2f %s (%+.2f%%) | Nakit: %.2f %s | Acik Poz: %d (%.2f %s) | DD: %.2f%%",
             total_equity,
+            QUOTE_CURRENCY,
             net_pnl_pct,
             account["cash_usdt"],
+            QUOTE_CURRENCY,
             len(positions),
             positions_val,
+            QUOTE_CURRENCY,
             dd_pct * 100.0,
         )
 
@@ -411,7 +427,7 @@ def main():
     parser.add_argument("--strategy", choices=list(STRATEGIES.keys()), default="supertrend_ema")
     parser.add_argument("--timeframe", choices=["15m", "1h", "4h"], default="4h")
     parser.add_argument("--symbols", nargs="+", default=DEFAULT_SYMBOLS)
-    parser.add_argument("--capital", type=float, default=100.0, help="Baslangic sanal kasa (USDT)")
+    parser.add_argument("--capital", type=float, default=5000.0, help=f"Baslangic sanal kasa ({QUOTE_CURRENCY})")
     parser.add_argument("--interval", type=int, default=60, help="Kontrol araligi (saniye)")
     parser.add_argument("--db", type=str, default=str(DB_PATH), help="SQLite veritabani yolu")
     parser.add_argument("--once", action="store_true", help="Tek kontrol dongusu calistir ve cik")
@@ -426,14 +442,14 @@ def main():
 
     if args.reset:
         storage.reset_account(args.capital)
-        logger.info("Sanal hesap %.2f USDT ile sifirlandi.", args.capital)
+        logger.info("Sanal hesap %.2f %s ile sifirlandi.", args.capital, QUOTE_CURRENCY)
 
     cfg = PaperBotConfig(
         strategy_name=args.strategy,
         symbols=args.symbols,
         timeframe=args.timeframe,
         poll_interval_seconds=args.interval,
-        exchange=ExchangeSimConfig(initial_capital_usdt=args.capital),
+        exchange=ExchangeSimConfig(initial_capital=args.capital),
         risk=RiskConfig(),
     )
 

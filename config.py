@@ -11,13 +11,15 @@ DB_PATH = BASE_DIR / "paper_trading.db"
 TRADES_CSV_PATH = LOGS_DIR / "paper_trades.csv"
 EQUITY_CSV_PATH = LOGS_DIR / "equity_curve.csv"
 
-# Varsayilan test pariteleri (yuksek likidite, dusuk spread)
+QUOTE_CURRENCY = "TRY"
+
+# Varsayilan pariteler (Binance TRY spot piyasalari)
 DEFAULT_SYMBOLS: List[str] = [
-    "BTC/USDT",
-    "ETH/USDT",
-    "SOL/USDT",
-    "BNB/USDT",
-    "XRP/USDT",
+    "BTC/TRY",
+    "ETH/TRY",
+    "SOL/TRY",
+    "BNB/TRY",
+    "XRP/TRY",
 ]
 
 # Test edilecek zaman dilimleri
@@ -27,7 +29,8 @@ DEFAULT_TIMEFRAMES: List[str] = ["15m", "1h", "4h"]
 @dataclass
 class ExchangeSimConfig:
     """Gercekci borsa maliyet ve emir simulasyon parametreleri."""
-    initial_capital_usdt: float = 100.0     # Baslangic sanal kasa (USDT)
+    initial_capital: float = 5000.0         # Baslangic sanal kasa (TRY)
+    min_notional: float = 100.0             # Minimum spot emir tutari (TRY)
     fee_rate: float = 0.001                 # Binance Spot standart %0.10 (tek yon)
     slippage_rate: float = 0.0005           # %0.05 tahmini kayma (tek yon)
 

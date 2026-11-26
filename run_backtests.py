@@ -7,7 +7,7 @@ import pandas as pd
 from tabulate import tabulate
 
 from backtest import run_portfolio_backtest, run_single_backtest
-from config import DEFAULT_SYMBOLS, ExchangeSimConfig, LOGS_DIR, RiskConfig
+from config import DEFAULT_SYMBOLS, ExchangeSimConfig, LOGS_DIR, QUOTE_CURRENCY, RiskConfig
 from data_loader import create_exchange, fetch_historical_ohlcv
 from strategies import STRATEGIES
 
@@ -15,12 +15,12 @@ from strategies import STRATEGIES
 def run_benchmark(symbols: List[str], timeframes: List[str], days_1h_4h: int = 365, days_15m: int = 180):
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     ex = create_exchange()
-    ex_cfg = ExchangeSimConfig(initial_capital_usdt=100.0, fee_rate=0.001, slippage_rate=0.0005)
+    ex_cfg = ExchangeSimConfig()
     risk_cfg = RiskConfig()
 
     print("=" * 85)
-    print("BINANCE GECMIS VERI BACKTEST KARSILASTIRMASI")
-    print(f"Baslangic Kasa: {ex_cfg.initial_capital_usdt:.0f} USDT | Komisyon: %{ex_cfg.fee_rate*100:.2f}/yon | Slippage: %{ex_cfg.slippage_rate*100:.2f}/yon")
+    print(f"BINANCE GECMIS VERI BACKTEST KARSILASTIRMASI ({QUOTE_CURRENCY})")
+    print(f"Baslangic Kasa: {ex_cfg.initial_capital:.0f} {QUOTE_CURRENCY} | Komisyon: %{ex_cfg.fee_rate*100:.2f}/yon | Slippage: %{ex_cfg.slippage_rate*100:.2f}/yon")
     print(f"Islem Basi Risk: %{risk_cfg.risk_per_trade_pct*100:.1f} | Gunluk Max Zarar: %{risk_cfg.daily_max_loss_pct*100:.1f}")
     print("=" * 85)
 
@@ -78,8 +78,8 @@ def run_benchmark(symbols: List[str], timeframes: List[str], days_1h_4h: int = 3
                     "PF": round(res.profit_factor, 2),
                     "Sharpe": round(res.sharpe_ratio, 2),
                     "Islem": res.num_trades,
-                    "Komisyon $": round(res.total_fees_usdt, 2),
-                    "Son Kasa $": round(res.final_equity, 2),
+                    f"Komisyon {QUOTE_CURRENCY}": round(res.total_fees_usdt, 2),
+                    f"Son Kasa {QUOTE_CURRENCY}": round(res.final_equity, 2),
                 }
             )
 
@@ -107,8 +107,8 @@ def run_benchmark(symbols: List[str], timeframes: List[str], days_1h_4h: int = 3
                         "PF": round(sres.profit_factor, 2),
                         "Sharpe": round(sres.sharpe_ratio, 2),
                         "Islem": sres.num_trades,
-                        "Komisyon $": round(sres.total_fees_usdt, 2),
-                        "Son Kasa $": round(sres.final_equity, 2),
+                        f"Komisyon {QUOTE_CURRENCY}": round(sres.total_fees_usdt, 2),
+                        f"Son Kasa {QUOTE_CURRENCY}": round(sres.final_equity, 2),
                     }
                 )
 
@@ -119,7 +119,7 @@ def run_benchmark(symbols: List[str], timeframes: List[str], days_1h_4h: int = 3
     single_df.to_csv(LOGS_DIR / "backtest_single_summary.csv", index=False)
 
     print("\n" + "=" * 85)
-    print("1) COKLU PARITE PORTFOY SONUCLARI (Ortak 100 USDT Kasa, Max 3 Acik Pozisyon)")
+    print(f"1) COKLU PARITE PORTFOY SONUCLARI (Ortak {ex_cfg.initial_capital:.0f} {QUOTE_CURRENCY} Kasa, Max 3 Acik Pozisyon)")
     print("=" * 85)
     print(tabulate(port_df, headers="keys", tablefmt="github", showindex=False))
 

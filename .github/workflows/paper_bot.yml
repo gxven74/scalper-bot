@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       reset_capital:
-        description: "Sanal kasayi sifirlamak icin tutar girin (bos birakirsaniz normal devam eder, orn: 500)"
+        description: "Sanal kasayi sifirlamak icin TRY tutari girin (bos birakirsaniz normal devam eder, orn: 5000)"
         required: false
         default: ""
       strategy:
@@ -54,7 +54,7 @@ jobs:
           if [ -n "$RESET_CAPITAL" ]; then
             python paper_trader.py --strategy "$STRATEGY" --reset --capital "$RESET_CAPITAL" --once
           else
-            python paper_trader.py --strategy "$STRATEGY" --capital 100 --once
+            python paper_trader.py --strategy "$STRATEGY" --capital 5000 --once
           fi
 
       - name: STATUS.md raporunu guncelle
