@@ -3,24 +3,24 @@
 | Metrik                | Deger                                                       |
 |-----------------------|-------------------------------------------------------------|
 | Baslangic Kasa        | 1,000.00 TRY                                                |
-| Guncel Toplam Kasa    | 1,000.00 TRY (+0.00 TRY / +0.00%) (~19.72 USDT, kur: 50.72) |
+| Guncel Toplam Kasa    | 1,000.00 TRY (+0.00 TRY / +0.00%) (~19.76 USDT, kur: 50.61) |
 | Serbest Nakit         | 1,000.00 TRY                                                |
 | Acik Pozisyon Degeri  | 0.00 TRY (0 pozisyon)                                       |
 | Zirve Kasa / Anlik DD | 1,000.00 TRY / %0.00                                        |
 | Gunluk Kill-Switch    | Normal                                                      |
 | Max DD Korumasi       | Normal                                                      |
-| Son Guncelleme        | 2026-11-27 19:30:42 UTC                                     |
+| Son Guncelleme        | 2026-11-28 02:08:12 UTC                                     |
 
 
 ## Piyasa Radari (Anlik Inis-Cikis & Sinyal Durumu)
 
 | Parite   | Anlik (TRY)   | 4s Degisim   | 24s Degisim   | RSI   | ADX   | EMA200   | SuperTrend   | Durum                   |
 |----------|---------------|--------------|---------------|-------|-------|----------|--------------|-------------------------|
-| BTC/TRY  | 3,041,337.00  | -0.28%       | ▼ -0.92%      | 47.1  | 16.2  | Altinda  | Yukselis     | Beklemede (Dusus/Yatay) |
-| ETH/TRY  | 84,855.00     | -0.01%       | ▼ -0.99%      | 45.1  | 20.7  | Altinda  | Dusus        | Beklemede (Dusus/Yatay) |
-| SOL/TRY  | 3,665.90      | +0.07%       | ▲ +1.86%      | 56.9  | 13.5  | Altinda  | Yukselis     | Beklemede (Dusus/Yatay) |
-| BNB/TRY  | 28,084.00     | -0.11%       | ▲ +0.63%      | 50.5  | 14.7  | Altinda  | Yukselis     | Beklemede (Dusus/Yatay) |
-| XRP/TRY  | 48.29         | -0.10%       | ▲ +0.60%      | 53.4  | 20.0  | Altinda  | Yukselis     | Beklemede (Dusus/Yatay) |
+| BTC/TRY  | 3,044,970.00  | +0.12%       | ▼ -0.57%      | 45.9  | 16.8  | Altinda  | Yukselis     | Beklemede (Dusus/Yatay) |
+| ETH/TRY  | 84,489.00     | +0.12%       | ▼ -1.14%      | 43.1  | 18.5  | Altinda  | Dusus        | Beklemede (Dusus/Yatay) |
+| SOL/TRY  | 3,652.10      | +0.41%       | ▲ +1.69%      | 53.7  | 12.5  | Altinda  | Yukselis     | Beklemede (Dusus/Yatay) |
+| BNB/TRY  | 28,160.00     | +0.01%       | ▲ +0.52%      | 51.4  | 15.3  | Altinda  | Yukselis     | Beklemede (Dusus/Yatay) |
+| XRP/TRY  | 48.32         | +0.33%       | ▲ +1.26%      | 52.1  | 17.8  | Altinda  | Yukselis     | Beklemede (Dusus/Yatay) |
 
 
 ## Acik Pozisyonlar
